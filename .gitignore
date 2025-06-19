@@ -1,0 +1,14 @@
+# Python bytecode files
+__pycache__/
+*.pyc
+*.pyd
+*.so
+
+# IDE and Editor specific files
+.DS_Store
+
+# Still in production
+tests/
+
+# Database files
+videos/

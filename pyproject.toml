@@ -8,11 +8,17 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "opencv-python (>=4.11.0.86,<5.0.0.0)"
+    "paddleocr (>=3.0.2,<4.0.0)",
+    "paddlepaddle (>=3.0.0,<4.0.0)",
+    "setuptools (>=80.9.0,<81.0.0)",
+    "opencv-python (>=4.11.0.86,<5.0.0.0)",
 ]
 
 [tool.poetry]
 packages = [{include = "power_supply_ocr", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.13"
 
 [tool.poetry.scripts]
 ocr = 'power_supply_ocr.main:main'

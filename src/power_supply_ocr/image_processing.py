@@ -5,14 +5,16 @@ import numpy as np
 
 from paddleocr import PaddleOCR
 
-
+# Constants
+EXIT_FAILURE = 1
+GREEN = (0, 255, 0)
+RED = (0, 0, 255)
+DEFAULT_RESOLUTION = (640, 480)
 # Text parameters
 text = "Object Detected"
 font = cv2.FONT_HERSHEY_SIMPLEX
 font_scale = 0.7
 font_thickness = 2
-GREEN = (0, 255, 0)
-RED = (0, 0, 255)
 
 ocr = PaddleOCR(
     use_doc_orientation_classify=False,
@@ -20,45 +22,40 @@ ocr = PaddleOCR(
     use_textline_orientation=False)
 
 def image_detection(frame):
-    # frame_resized = cv2.resize(frame, DEFAULT_RESOLUTION)
+    frame_resized = cv2.resize(frame, DEFAULT_RESOLUTION)
 
-    voltage, voltage_location = predict_single_number(frame, 325, 150, 325, 125, GREEN)
-    current, current_location = predict_single_number(frame, 260, 500, 400, 150, RED)
+    voltage, voltage_location = predict_single_number(frame_resized, 105, 55, 110, 70, GREEN)
+    current, current_location = predict_single_number(frame_resized, 90, 220, 130, 70, RED)
 
     
-    display_read_value("Voltage", frame, voltage, voltage_location, GREEN)
-    display_read_value("Current", frame, current, current_location, RED)
-    cv2.imshow("Power Supply Image detection", frame)
+    display_read_value("Voltage", frame_resized, voltage, voltage_location, GREEN)
+    display_read_value("Current", frame_resized, current, current_location, RED)
+    cv2.imshow("Power Supply Image detection", frame_resized)
     return frame
 
 def predict_single_number(frame, x, y, w, h, color):
-    crop_image = frame[y: y + h, x:x + w]
-    crop_image = cv2.cvtColor(crop_image, cv2.COLOR_BGR2GRAY)
-    # kernel = np.ones((1, 1), np.uint8)
-    # img = cv2.dilate(img, kernel, iterations=1)
-    # img = cv2.erode(img, kernel, iterations=1)
-    # img = cv2.threshold(cv2.medianBlur(img, 3), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-
+    
     temp_file = "temp.jpg"
-    cv2.imwrite(temp_file, crop_image)
+    crop_image = frame[y: y + h, x:x + w]
+    filtered_image = image_filter(crop_image)
+
+    if not (cv2.imwrite(temp_file, filtered_image)):
+        print("Temp file can't be create")
+        exit(EXIT_FAILURE)
+
     result = ocr.predict(temp_file)
     cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
     location = find_text_position(frame, x, y, w, h)
-    os.unlink(temp_file)
-
-    # Process the frame with EasyOCR
-    # result = reader.readtext(img, allowlist ='0123456789', detail=0)
-    # for (bbox, text, prob) in result:
-    #     print(f'Text: {text}, Probability: {prob}')
-    # img_new = Image.fromarray(edges)
-    # text = pytesseract.image_to_string(img_new, lang='letsgodigital',config='--oem 3 --psm 10 -c tessedit_char_whitelist=0123456789' )
-    # try:
-    #     print(text[0)
-    # except IndexError as e:
-    #     print("None")
-    # cv2.imshow("Voltage", crop_image)
-    
+    os.unlink(temp_file)    
     return result, location
+
+def image_filter(img):
+    # filtered_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    filtered_img = cv2.GaussianBlur(img, (5, 5), 0)
+    kernel = np.ones((1, 1), np.uint8)
+    filtered_img = cv2.dilate(filtered_img, kernel, iterations=1)
+    filtered_img = cv2.erode(filtered_img, kernel, iterations=1)
+    return img
     
 
 def find_text_position(frame, x, y, w, h):

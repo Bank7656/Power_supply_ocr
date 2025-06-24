@@ -1,7 +1,5 @@
 import cv2
 import sys
-# import easyocr
-# import pytesseract
 
 from power_supply_ocr.image_processing import image_detection
 from PIL import Image
@@ -9,6 +7,9 @@ from PIL import Image
 # Constants
 EXIT_FAILURE = 1
 ESCAPE_KEY = chr(27)
+DEFAULT_RESOLUTION = (640, 480)
+VOLTAGE_SELECTION_PROMPT = "select the area to measure voltage"
+CURRENT_SELECTION_PROMPT = "select the area to measure current"
 
 def open_video():
     cap = cv2.VideoCapture("./videos/18_JUN_RUN_4.mp4")
@@ -32,6 +33,7 @@ def loop_video(cap, fps):
     frame_count = 0
     while True:
         success, frame = cap.read()
+
         if not success:
             print("End of the video or Error reading frame")
             return
@@ -40,8 +42,17 @@ def loop_video(cap, fps):
             break
     
         if frame_count % fps == 0:
-            image_detection(frame)
-
+            frame_resized = cv2.resize(frame, DEFAULT_RESOLUTION)
+            if frame_count == 0:
+                roi_voltage = cv2.selectROI(VOLTAGE_SELECTION_PROMPT, frame_resized)
+                cv2.destroyWindow(VOLTAGE_SELECTION_PROMPT)
+                roi_current = cv2.selectROI(CURRENT_SELECTION_PROMPT, frame_resized)
+                cv2.destroyWindow(CURRENT_SELECTION_PROMPT)
+                if roi_voltage == (0, 0, 0, 0) or roi_current == (0, 0, 0, 0):
+                    print("Both roi were not detected propely!!")
+                    print("[Exiting Program]")
+                    break
+            image_detection(frame_resized, roi_voltage, roi_current)
         frame_count += 1
     return 
 

@@ -11,5 +11,6 @@ __pycache__/
 tests/
 
 # Database files
+output/
 videos/
 temp.jpg

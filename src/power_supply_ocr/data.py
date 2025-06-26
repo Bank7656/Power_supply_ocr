@@ -2,7 +2,6 @@ import os
 from openpyxl import Workbook
 import pandas as pd
 
-
 OUTPUT_DIR_NAME = "output"
 TITLE_NAME = "power_supply_data"
 
@@ -48,5 +47,8 @@ def save_excel(excel, filename):
         excel.save(excel_file)
     except PermissionError:
         print("Error: Permission denied. Please ensure the file is not open and you have write permissions for the location.")
+    else:
+        print(f"{filename} was saved successfully >_<")
+        print("[Exit program]")
     return
     

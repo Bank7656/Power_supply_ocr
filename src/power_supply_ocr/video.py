@@ -18,6 +18,7 @@ CURRENT_SELECTION_PROMPT = "select the area to measure current"
 def get_video():
     filepath = askopenfilename()
     filename, filetype = filepath.split("/")[-1].split(".")
+    print(filepath)
     if filetype not in VIDEO_TYPE:
         print("File type does not support!")
         print("[Exiting program]")
@@ -35,7 +36,7 @@ def open_video(filename, filepath):
     return video, fps
     
 def get_video_detail(cap):
-    fps = cap.get(cv2.CAP_PROP_FPS)
+    fps = round(cap.get(cv2.CAP_PROP_FPS))
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -48,7 +49,6 @@ def loop_video(cap, fps, sheet):
     frame_count = 0
     while True:
         success, frame = cap.read()
-
         if not success:
             print("End of the video or Error reading frame")
             return
@@ -66,7 +66,7 @@ def loop_video(cap, fps, sheet):
                     break
             frame, value = image_detection(frame_resized, roi_voltage, roi_current)
             update_excel(sheet, value)
-            cv2.imshow("Power Supply Image detection", frame)
+            # cv2.imshow("Power Supply Image detection", frame)
         frame_count += 1
     return 
 

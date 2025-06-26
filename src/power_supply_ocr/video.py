@@ -1,6 +1,7 @@
 import cv2
 import sys
 
+from tqdm import tqdm
 from power_supply_ocr.data import update_excel
 from power_supply_ocr.image_processing import image_detection
 from PIL import Image
@@ -32,8 +33,8 @@ def open_video(filename, filepath):
         print("Video can't be opened")
         print("[Exiting Program]")
         sys.exit(EXIT_FAILURE)
-    fps = get_video_detail(video)
-    return video, fps
+    fps, total_frames = get_video_detail(video)
+    return video, fps, total_frames 
     
 def get_video_detail(cap):
     fps = round(cap.get(cv2.CAP_PROP_FPS))
@@ -42,10 +43,10 @@ def get_video_detail(cap):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     print(f"[Fps: {fps}]")
     print(f"[Resolution: {frame_width} x {frame_height} Total: {total_frames} frames]")
-    return fps
+    return fps, total_frames
 
     
-def loop_video(cap, fps, sheet):
+def loop_video(cap, fps, total_frames, sheet):
     frame_count = 0
     while True:
         success, frame = cap.read()
@@ -64,10 +65,13 @@ def loop_video(cap, fps, sheet):
                     print("Roi were not been chose properly!!!")
                     print("Exiting program")
                     break
+                progress_bar = tqdm("Times in video", total=round(total_frames / fps))
             frame, value = image_detection(frame_resized, roi_voltage, roi_current)
             update_excel(sheet, value)
-            # cv2.imshow("Power Supply Image detection", frame)
+            progress_bar.update(1)
+            cv2.imshow("Power Supply Image detection", frame)
         frame_count += 1
+    progress_bar.close()
     return 
 
 def get_roi(frame):

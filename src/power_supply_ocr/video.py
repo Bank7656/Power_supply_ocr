@@ -18,6 +18,10 @@ CURRENT_SELECTION_PROMPT = "select the area to measure current"
 
 def get_video():
     filepath = askopenfilename()
+    if not filepath:
+        print("File does not provided!")
+        print("[Exiting program]")
+        exit(EXIT_FAILURE)
     filename, filetype = filepath.split("/")[-1].split(".")
     print(filepath)
     if filetype not in VIDEO_TYPE:
@@ -27,12 +31,12 @@ def get_video():
     return filename, filepath
 
 
-def open_video(filename, filepath):
+def open_video(filepath):
     video = cv2.VideoCapture(filepath)
     if not video.isOpened():
         print("Video can't be opened")
         print("[Exiting Program]")
-        sys.exit(EXIT_FAILURE)
+        exit(EXIT_FAILURE)
     fps, total_frames = get_video_detail(video)
     return video, fps, total_frames 
     
@@ -46,7 +50,7 @@ def get_video_detail(cap):
     return fps, total_frames
 
     
-def loop_video(cap, fps, total_frames, sheet):
+def loop_video(cap, fps, total_frames, sheet) -> None:
     frame_count = 0
     while True:
         success, frame = cap.read()
@@ -63,7 +67,9 @@ def loop_video(cap, fps, total_frames, sheet):
                 roi_voltage, roi_current, status = get_roi(frame_resized)
                 if (status):
                     print("Roi were not been chose properly!!!")
-                    print("Exiting program")
+                    print("[Exiting program]")
+                    clear_video(cap)
+                    exit(EXIT_FAILURE)
                     break
                 progress_bar = tqdm("Times in video", total=round(total_frames / fps))
             frame, value = image_detection(frame_resized, roi_voltage, roi_current)
@@ -84,7 +90,7 @@ def get_roi(frame):
         status = 1
     return roi_voltage, roi_current, status
 
-def clear_video(cap):
+def clear_video(cap) -> None:
     cap.release()
     cv2.destroyAllWindows()
     return 

@@ -27,7 +27,7 @@ def create_excel():
     sheet['B1'] = "Current (A)"
     return excel, sheet
 
-def update_excel(sheet, value):
+def update_excel(sheet, value) -> None:
     voltage = value[0]
     current = value[1]
     global current_row_index
@@ -41,7 +41,7 @@ def update_excel(sheet, value):
     current_row_index += 1
     return
 
-def save_excel(excel, filename):
+def save_excel(excel, filename) -> None:
     excel_file = OUTPUT_DIR_NAME + "/" + filename + ".xlsx"
     try:
         excel.save(excel_file)

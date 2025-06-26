@@ -5,7 +5,7 @@ import tkinter as tk
 
 def main():
     filename, filepath = get_video()
-    video, fps, total_frames = open_video(filename, filepath)
+    video, fps, total_frames = open_video(filepath)
     create_output_dir()
     excel, sheet = create_excel() 
     loop_video(video, fps, total_frames, sheet)

@@ -25,12 +25,12 @@ ocr = PaddleOCR(
 )
 
 def image_detection(frame, roi_voltage, roi_current):
-    voltage, voltage_location = predict_single_number(frame, roi_voltage, GREEN)
-    current, current_location = predict_single_number(frame, roi_current, RED)
-    display_read_value("Voltage", frame, voltage, voltage_location, GREEN)
-    display_read_value("Current", frame, current, current_location, RED)
-    cv2.imshow("Power Supply Image detection", frame)
-    return frame
+    voltage_result, voltage_location = predict_single_number(frame, roi_voltage, GREEN)
+    current_result, current_location = predict_single_number(frame, roi_current, RED)
+    voltage = display_read_value("Voltage", frame, voltage_result, voltage_location, GREEN)
+    current = display_read_value("Current", frame, current_result, current_location, RED)
+    
+    return frame, [voltage, current]
 
 def predict_single_number(frame, roi, color):
     temp_file = "temp.jpg"
@@ -78,14 +78,18 @@ def find_text_position(frame, x, y, w, h):
 def display_read_value(parameter_name, frame, result, loc, color):
     for line in result:
         try:
-            text = parameter_name + ": " + line['rec_texts'][0] 
+            value = line['rec_texts'][0]
         except IndexError:
-            text = parameter_name + ": NaN"
-        cv2.putText(img=frame, 
-                    text=text, 
-                    org=loc, 
-                    fontFace=font, 
-                    fontScale=font_scale, 
-                    color=color, 
-                    thickness=font_thickness)
-    return
+            value = None
+            text = parameter_name + ": " + "NaN"
+        else:
+            text = parameter_name + ": " + value
+        finally:
+            cv2.putText(img=frame, 
+                        text=text, 
+                        org=loc, 
+                        fontFace=font, 
+                        fontScale=font_scale, 
+                        color=color, 
+                        thickness=font_thickness)
+            return value

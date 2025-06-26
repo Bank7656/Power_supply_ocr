@@ -1,6 +1,7 @@
 import cv2
 import sys
 
+from power_supply_ocr.data import update_excel
 from power_supply_ocr.image_processing import image_detection
 from PIL import Image
 
@@ -8,16 +9,20 @@ from PIL import Image
 EXIT_FAILURE = 1
 ESCAPE_KEY = chr(27)
 DEFAULT_RESOLUTION = (640, 480)
+EMPTY_ROI = (0, 0, 0, 0)
 VOLTAGE_SELECTION_PROMPT = "select the area to measure voltage"
 CURRENT_SELECTION_PROMPT = "select the area to measure current"
 
 def open_video():
-    cap = cv2.VideoCapture("./videos/18_JUN_RUN_4.mp4")
+
+    filepath = "./videos/18_JUN_RUN_4.mp4"
+    filename = filepath.split("/")[2].split(".")[0]
+    cap = cv2.VideoCapture(filepath)
     if not cap.isOpened():
         print("[Exiting Program]")
         sys.exit(EXIT_FAILURE)
     fps = get_video_detail(cap)
-    return cap, fps
+    return filename, cap, fps
     
 def get_video_detail(cap):
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -29,7 +34,7 @@ def get_video_detail(cap):
     return fps
 
     
-def loop_video(cap, fps):
+def loop_video(cap, fps, sheet):
     frame_count = 0
     while True:
         success, frame = cap.read()
@@ -44,17 +49,22 @@ def loop_video(cap, fps):
         if frame_count % fps == 0:
             frame_resized = cv2.resize(frame, DEFAULT_RESOLUTION)
             if frame_count == 0:
-                roi_voltage = cv2.selectROI(VOLTAGE_SELECTION_PROMPT, frame_resized)
-                cv2.destroyWindow(VOLTAGE_SELECTION_PROMPT)
-                roi_current = cv2.selectROI(CURRENT_SELECTION_PROMPT, frame_resized)
-                cv2.destroyWindow(CURRENT_SELECTION_PROMPT)
-                if roi_voltage == (0, 0, 0, 0) or roi_current == (0, 0, 0, 0):
-                    print("Both roi were not detected propely!!")
-                    print("[Exiting Program]")
-                    break
-            image_detection(frame_resized, roi_voltage, roi_current)
+                roi_voltage, roi_current = get_roi(frame_resized)
+            frame, value = image_detection(frame_resized, roi_voltage, roi_current)
+            update_excel(sheet, value)
+            cv2.imshow("Power Supply Image detection", frame)
         frame_count += 1
     return 
+
+def get_roi(frame):
+    roi_voltage = cv2.selectROI(VOLTAGE_SELECTION_PROMPT, frame)
+    cv2.destroyWindow(VOLTAGE_SELECTION_PROMPT)
+    roi_current = cv2.selectROI(CURRENT_SELECTION_PROMPT, frame)
+    cv2.destroyWindow(CURRENT_SELECTION_PROMPT)
+    if roi_voltage == EMPTY_ROI or roi_current == EMPTY_ROI:
+        print("Both roi were not detected propely!!")
+        print("[Exiting Program]")
+    return roi_voltage, roi_current
 
 def clear_video(cap):
     cap.release()
